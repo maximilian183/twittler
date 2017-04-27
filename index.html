@@ -2,25 +2,165 @@
 <html>
   <head>
     <script src="jquery.js"></script>
+    <script src="jquery.timeago.js" type="text/javascript"></script>
     <script src="data_generator.js"></script>
+    <link rel="stylesheet" href="twittler.css">
   </head>
   <body>
-    <script>
+      <!-- The Modal -->
+      <div id="myModal" class="modal">
+        <!-- Modal content -->
+        <div class="modal-content">
+          <div class="modal-header">
+            <span class="close">&times;</span>
+            <h2 id="show_username"></h2>
+          </div>
+          <div id="show_tweets" class="modal-body">
+          </div>
+          <div class="modal-footer">
+          </div>
+        </div>
+
+      </div>
+      <form action="" onsubmit="return false">
+      <input type="text" name="tweet" placeholder="Tweet Here =D">
+      <input type="submit" value="Tweet" onclick="youTweet(this.form.tweet.value)">
+      </form>
+      <section></section>
+
+      <script>
+
+      var scopedStreams = streams;
+
+      function getLiteralMonth(num){
+        var month_names = new Array ( );
+        month_names[month_names.length] = "January";
+        month_names[month_names.length] = "February";
+        month_names[month_names.length] = "March";
+        month_names[month_names.length] = "April";
+        month_names[month_names.length] = "May";
+        month_names[month_names.length] = "June";
+        month_names[month_names.length] = "July";
+        month_names[month_names.length] = "August";
+        month_names[month_names.length] = "September";
+        month_names[month_names.length] = "October";
+        month_names[month_names.length] = "November";
+        month_names[month_names.length] = "December";
+
+        return month_names[num];
+      }
+
+      function formatTweet(tweet){
+          var $tweet = $('<div class="tweetbox"></div>');
+          
+          var $top = $('<div class="tweettop"></div>');
+          var $accountLinks = $('<a onClick="showTweets(\'' + tweet.user + '\'); return false;" href=# class="accountLinks openModal"></a>');
+          var $topUser = $('<span class="topUser"></span>');
+          var $topTime = $('<span class="topTime"></span>');
+
+          $accountLinks.text(tweet.user);
+          $accountLinks.appendTo($top);
+          $topUser.text('  @' + tweet.user + '  ');
+          $topTime.text(getLiteralMonth(tweet.created_at.getMonth()) + ' ' + tweet.created_at.getDate() + ' ' + tweet.created_at.getHours() + ':' + (tweet.created_at.getMinutes()<10?'0':'') + tweet.created_at.getMinutes() + ':' + (tweet.created_at.getSeconds()<10?'0':'') + tweet.created_at.getSeconds() + '    ' +  jQuery.timeago(tweet.created_at));
+          $topUser.appendTo($top);
+          $topTime.appendTo($top);
+
+          var $content = $('<div class="tweetcontent"></div>')
+
+          $content.text( tweet.message );
+
+
+          $top.appendTo($tweet);
+          $content.appendTo($tweet);
+
+          return $tweet;
+      }
+
+      function youTweet(message){
+        var tweet = {};
+        tweet.user = 'me';
+        tweet.message = message;
+        tweet.created_at = new Date();
+        
+        streams.home.push(tweet);
+        
+        $('section').prepend("<hr>");
+        $('section').prepend(formatTweet(tweet));
+      }
+
+      function showTweets(username){
+          $('#show_username').text(username);
+
+
+          var $modalBody = $('#show_tweets');
+
+          $modalBody.html('');          
+          
+          var index = scopedStreams.users[username].length - 1;
+
+          while(index >= 0){
+            var tweet = scopedStreams.users[username][index];
+            var $tweet = $('<div class="tweetbox"></div>');
+            
+            var $top = $('<div class="tweettop"></div>');
+            var $topUser = $('<span class="topUser"></span>');
+            var $topTime = $('<span class="topTime"></span>');
+
+            $topUser.text('  @' + tweet.user + '  ');
+            $topTime.text(getLiteralMonth(tweet.created_at.getMonth()) + ' ' + tweet.created_at.getDate() + ' ' + tweet.created_at.getHours() + ':' + (tweet.created_at.getMinutes()<10?'0':'') + tweet.created_at.getMinutes() + ':' + (tweet.created_at.getSeconds()<10?'0':'') + tweet.created_at.getSeconds())
+            $topUser.appendTo($top);
+            $topTime.appendTo($top);
+
+            var $content = $('<div class="tweetcontent"></div>')
+
+            $content.text( tweet.message );
+
+
+            $top.appendTo($tweet);
+            $content.appendTo($tweet);
+            
+
+            $tweet.appendTo($modalBody);
+            index -= 1;
+          }
+
+
+          modal.show();
+      }
+
+      // Loading Tweets
 
       $(document).ready(function(){
-        var $body = $('body');
-        $body.html('');
+        var $section = $('section');
 
-        var index = streams.home.length - 1;
+        var index = scopedStreams.home.length - 1;
+
         while(index >= 0){
-          var tweet = streams.home[index];
-          var $tweet = $('<div></div>');
-          $tweet.text('@' + tweet.user + ': ' + tweet.message);
-          $tweet.appendTo($body);
+          var tweet = scopedStreams.home[index];
+          
+          formatTweet(tweet).appendTo($section);
           index -= 1;
         }
-
       });
+
+
+      // Get the modal
+      var modal = $('#myModal');
+
+      // Get the <span> element that closes the modal
+      var span = $(".close")[0];
+
+      // When the user clicks on <span> (x), close the modal
+      span.onclick = function() {
+          modal.hide();
+      }
+
+      // When the user clicks anywhere outside of the modal, close it
+      window.onclick = function(event) {
+          if (event.target == modal) {
+              modal.hide();
+          }
+      }
 
     </script>
   </body>
