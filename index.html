@@ -22,15 +22,18 @@
         </div>
 
       </div>
+
       <form action="" onsubmit="return false">
-      <input type="text" name="tweet" placeholder="Tweet Here =D">
+      <input type="text" name="tweet" width="100" placeholder="Tweet Here =D">
       <input type="submit" value="Tweet" onclick="youTweet(this.form.tweet.value)">
+      <input type="button" name="refreshHere" value="Refresh" onclick="refreshTweets()">
       </form>
       <section></section>
 
       <script>
 
       var scopedStreams = streams;
+      var latestPull = new Date("1776-03-25");
 
       function getLiteralMonth(num){
         var month_names = new Array ( );
@@ -91,7 +94,6 @@
       function showTweets(username){
           $('#show_username').text(username);
 
-
           var $modalBody = $('#show_tweets');
 
           $modalBody.html('');          
@@ -99,48 +101,59 @@
           var index = scopedStreams.users[username].length - 1;
 
           while(index >= 0){
-            var tweet = scopedStreams.users[username][index];
-            var $tweet = $('<div class="tweetbox"></div>');
-            
-            var $top = $('<div class="tweettop"></div>');
-            var $topUser = $('<span class="topUser"></span>');
-            var $topTime = $('<span class="topTime"></span>');
+              var tweet = scopedStreams.users[username][index];
+              var $tweet = $('<div class="tweetbox"></div>');
+              
+              var $top = $('<div class="tweettop"></div>');
+              var $topUser = $('<span class="topUser"></span>');
+              var $topTime = $('<span class="topTime"></span>');
 
-            $topUser.text('  @' + tweet.user + '  ');
-            $topTime.text(getLiteralMonth(tweet.created_at.getMonth()) + ' ' + tweet.created_at.getDate() + ' ' + tweet.created_at.getHours() + ':' + (tweet.created_at.getMinutes()<10?'0':'') + tweet.created_at.getMinutes() + ':' + (tweet.created_at.getSeconds()<10?'0':'') + tweet.created_at.getSeconds())
-            $topUser.appendTo($top);
-            $topTime.appendTo($top);
+              $topUser.text('  @' + tweet.user + '  ');
+              $topTime.text(getLiteralMonth(tweet.created_at.getMonth()) + ' ' + tweet.created_at.getDate() + ' ' + tweet.created_at.getHours() + ':' + (tweet.created_at.getMinutes()<10?'0':'') + tweet.created_at.getMinutes() + ':' + (tweet.created_at.getSeconds()<10?'0':'') + tweet.created_at.getSeconds())
+              $topUser.appendTo($top);
+              $topTime.appendTo($top);
 
-            var $content = $('<div class="tweetcontent"></div>')
+              var $content = $('<div class="tweetcontent"></div>')
 
-            $content.text( tweet.message );
+              $content.text( tweet.message );
 
 
-            $top.appendTo($tweet);
-            $content.appendTo($tweet);
-            
+              $top.appendTo($tweet);
+              $content.appendTo($tweet);
+              
 
-            $tweet.appendTo($modalBody);
-            index -= 1;
+              $tweet.appendTo($modalBody);
+              index -= 1;
           }
-
-
+              
           modal.show();
+      }
+
+      function refreshTweets(){
+        var $section = $('section');
+
+        var index = 0;
+        var FLAGGED_NEWEST = false;
+        var memoTime = new Date();
+
+        while(index <= scopedStreams.home.length - 1){
+          var tweet = scopedStreams.home[index];
+          if(!FLAGGED_NEWEST){
+            memoTime = tweet.created_at;
+            FLAGGED_NEWEST = true;
+          }
+          if(tweet.created_at.getTime()>latestPull.getTime()){
+            formatTweet(tweet).prependTo($section);
+          }
+          index += 1;
+        }
+        latestPull = memoTime;
       }
 
       // Loading Tweets
 
       $(document).ready(function(){
-        var $section = $('section');
-
-        var index = scopedStreams.home.length - 1;
-
-        while(index >= 0){
-          var tweet = scopedStreams.home[index];
-          
-          formatTweet(tweet).appendTo($section);
-          index -= 1;
-        }
+        refreshTweets();
       });
 
 
